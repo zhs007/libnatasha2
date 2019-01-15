@@ -1,0 +1,398 @@
+syntax = "proto3";
+import "google/protobuf/any.proto";
+package natashapb;
+
+// CODE - error code
+enum CODE {
+    OK = 0;
+
+    //----------------------------------------------------------
+    // init
+
+    // invalid paytables cfg
+    INVALID_PAYTABLES_CFG = 10000;    
+    // invalid lines cfg
+    INVALID_LINES_CFG = 10001;
+    // invalid reels cfg
+    INVALID_REELS_CFG = 10002;    
+
+    //----------------------------------------------------------
+    // start game module
+
+    // invalid module to start
+    INVALID_START_GAMEMOD_TO_START = 20000;
+    // invalid freegame nums
+    INVALID_START_FREEGAME_NUMS = 20001;
+    // invalid start bet
+    INVALID_START_BET = 20002;    
+    // invalid start lines
+    INVALID_START_LINES = 20003;    
+    // invalid start times
+    INVALID_START_TIMES = 20004;
+    // already in freegame
+    ALREADY_IN_FREEGAME = 20005;
+    // invalid parentid
+    INVALID_PARENTID = 20006;
+    // invalid parent game module
+    INVALID_PARENT_GAMEMOD = 20007;    
+
+    //----------------------------------------------------------
+    // review game ctrl
+
+    // invalid bet
+    INVALID_BET = 30000;
+    // invalid lines
+    INVALID_LINES = 30001;    
+    // invalid times
+    INVALID_TIMES = 30002;
+    // invalid game module in gamectrl
+    INVALID_GAMECTRL_GAMEMOD = 30003;
+
+    //----------------------------------------------------------
+    // countSpinResult
+
+    // invalid cascading freegame state
+    INVALID_CASCADING_FREESTATE = 40000;
+
+    //----------------------------------------------------------
+    // common
+
+    // no overloaded interface
+    ERR_NO_OVERLOADED_INTERFACE = 90000;
+}
+
+// // SymbolLine -
+// message SymbolLine {
+//     repeated int32 xDat = 1;
+// }
+
+// // SymbolBlock - 
+// message SymbolBlock {
+//     repeated SymbolLine yDat = 1;
+// }
+
+// SymbolBlock3X5 - SymbolBlock 3X5
+message SymbolBlock3X5 {
+    int32 dat0_0 = 1;
+    int32 dat0_1 = 2;
+    int32 dat0_2 = 3;
+    int32 dat0_3 = 4;
+    int32 dat0_4 = 5;
+    int32 dat1_0 = 6;
+    int32 dat1_1 = 7;
+    int32 dat1_2 = 8;
+    int32 dat1_3 = 9;
+    int32 dat1_4 = 10;
+    int32 dat2_0 = 11;
+    int32 dat2_1 = 12;
+    int32 dat2_2 = 13;
+    int32 dat2_3 = 14;
+    int32 dat2_4 = 15;
+}
+
+// SymbolBlock - 
+message SymbolBlock {
+    oneof block {
+        SymbolBlock3X5 sb3x5 = 1;
+    }
+}
+
+// StaticCascadingRandomResult3X5 - static cascading random result for symbolblock 3X5
+message StaticCascadingRandomResult3X5 {
+    int32 reelsIndex = 1;
+    int32 downNums = 2;
+    SymbolBlock symbolblock = 3;
+}
+
+// RandomResult - common random result
+message RandomResult {
+    // only once
+    oneof result {
+        StaticCascadingRandomResult3X5 scrr3x5 = 1;
+    }
+
+    google.protobuf.Any info = 1000;
+}
+
+// Position2D - position 2d
+message Position2D {
+    int32 x = 1;
+    int32 y = 2;
+}
+
+// GAMERESULTTYPE - game result type
+enum GAMERESULTTYPE {
+    // no win
+    NO_WIN = 0;
+    // line from left to right
+    LINE_LEFT = 1;
+    // line from right to left
+    LINE_RIGHT = 2;
+    // scatter from left to right
+    SCATTER_LEFT = 3;
+    // scatter from right to left
+    SCATTER_RIGHT = 4;
+    // scatterex from left to right
+    SCATTEREX_LEFT = 5;
+    // scatterex from right to left
+    SCATTEREX_RIGHT = 6;
+};
+
+// GameResultInfo - game result info
+//      GameResultInfo is just a line win or a scatter win
+//      exDat is used to handle different game extension properties 
+message GameResultInfo {
+    GAMERESULTTYPE typeGameResult = 1;
+    repeated Position2D lstPos = 2;
+    int32 symbol = 3;
+    repeated int32 lstSymbol = 4;
+    int64 win = 5;
+    int64 realWin = 6;
+    int64 mul = 7;
+    int64 prize = 8;
+    int32 lineIndex = 9;
+
+    google.protobuf.Any exDat = 1000;
+}
+
+// SpinResult - spin result
+//      exDat is used to handle different game extension properties
+//            - spin结果
+//      exDat是扩展属性，不同游戏可能不一样
+message SpinResult {
+    // win - sum(GameResultInfo.realwin)
+    //     - GameResultInfo里面真实赢得之和
+    int64 win = 1;
+    // realWin - win + other prize
+    //         - win加上其余的奖励，是这次spin的实际赢得
+    int64 realWin = 2;
+    // lstGRI - GameResultInfo list
+    //        - GameResultInfo队列
+    repeated GameResultInfo lstGRI = 3;
+    // fgNums - freegame nums
+    //        - 该局产生的免费次数
+    int32 fgNums = 4;
+    // inFG - freegame
+    //      - 该局产生了freegame
+    bool inFG = 5;
+    // inBonus - bonus
+    //         - 该局产生了bonus
+    bool inBonus = 6;
+    // inJackpot - jackpot
+    //           - 该局产生了jackpot
+    bool inJackpot = 7;
+    // inCommonJackpot - common jackpot
+    //                 - 该局产生了common jackpot    
+    bool inCommonJackpot = 8;
+    // inRespin - respin
+    //          - 该局产生了respin
+    bool inRespin = 9;
+    // awardMul - award muliti
+    //          - 该局产生了奖励倍数    
+    int64 awardMul = 10;
+    // realFGNums - real freegame nums
+    //            - 该局结束后，需要进免费游戏，且这个是免费游戏实际的免费次数
+    int32 realFGNums = 11;
+
+    // symbolblock - symbol block
+    SymbolBlock symbolblock = 100;
+
+    // exDat - extend data
+    google.protobuf.Any exDat = 1000;
+}
+
+enum GAMEMODTYPE {
+    // null mod type
+    NULL_MOD = 0;
+    // base game
+    BASE_GAME = 1;
+    // free game
+    FREE_GAME = 2;
+    // bonus
+    BONUS_GAME = 3;
+    // jackpot
+    JACKPOT_GAME = 4;    
+    // common jackpot
+    COMMON_JACKPOT_GAME = 5;
+}
+
+// GameCtrlID - GameCtrlID is used to analyze the logical relationship of the current game's turn
+message GameCtrlID {
+    int64 ctrlID = 1;
+    int64 baseID = 2;
+    int64 parentID = 3;
+    GAMEMODTYPE gameMod = 4;
+}
+
+// Cascading freegame state
+enum CASCADINGFREESTATE {
+    // no freegame
+    NO_FREEGAME = 0;
+    // chg to freegame
+    CHG_TO_FREEGAME = 1;
+    // freegame end
+    END_FREEGAME = 2;
+}
+
+// BaseCascadingInfo - basic cascading game data
+message BaseCascadingInfo {
+    int64 curBet = 1;
+    int32 curLines = 2;
+    int32 curTimes = 3;
+    int32 turnNums = 4;
+    int64 turnWin = 5;    
+    CASCADINGFREESTATE freeState = 6;
+
+    SymbolBlock symbolblock = 100;
+}
+
+// BaseFGInfo - basic free game data
+message BaseFreeInfo {
+    int64 curBet = 1;
+    int32 curLines = 2;
+    int32 curTimes = 3;    
+    int64 totalWin = 4;
+    int32 lastNums = 5;
+    int32 curNums = 6; 
+}
+
+// RespinHistory - respin history
+message RespinHistory {
+    int64 realWin = 1;
+    int64 win = 2;
+    int64 mul = 3;
+    bool isSpecial = 4;
+}
+
+// RespinHistoryList - respin history list
+message RespinHistoryList {
+    repeated RespinHistory lst = 1;
+}
+
+// UserGameModInfo - user's game module info
+message UserGameModInfo {
+    int32 ver = 1;
+
+    RandomResult randomResult = 10;
+    SpinResult spinResult = 11;
+    GameCtrlID gameCtrlID = 12;
+    BaseCascadingInfo cascadingInfo = 13;
+    RespinHistoryList lstHistory = 14;
+    BaseFreeInfo freeInfo = 15;
+
+    SymbolBlock symbolblock = 100;
+
+    google.protobuf.Any exDat = 1000;
+}
+
+// UserGameLogicInfo - user's game logic info
+message UserGameLogicInfo {
+    UserGameModInfo basegame = 1;
+    UserGameModInfo freegame = 2;
+    UserGameModInfo bonus = 3;
+    UserGameModInfo jackpot = 4;
+    UserGameModInfo commonjackpot = 5;
+    UserGameModInfo respin = 6;
+
+    // isCompleted - 玩家特殊状态已完成，下一局应该付费游戏
+    bool isCompleted = 30;
+
+    GAMEMODTYPE curGameModType = 100;
+    GAMEMODTYPE nextGameModType = 101;
+}
+
+// GameCtrlSpin - basegame spin
+message GameCtrlSpin {
+    int64 bet = 1;
+    int32 lines = 2;
+    int32 times = 3;
+    int64 totalBet = 4;
+    int64 realBet = 5;
+}
+
+// GameCtrlSelectFree - freegame select free
+message GameCtrlSelectFree {
+    int32 typeIndex = 1;
+}
+
+// GameCtrlFreeSpin - freegame spin
+message GameCtrlFreeSpin {
+    int64 bet = 1;
+    int32 lines = 2;
+    int32 times = 3;  
+    int64 totalBet = 4; 
+    int64 realBet = 5;
+}
+
+// GameCtrlBonus - bonus
+message GameCtrlBonus {
+    int32 itemIndex = 1;   
+}
+
+// GameCtrlJackpot - jackpot
+message GameCtrlJackpot {
+    int32 itemIndex = 1;   
+}
+
+// GameCtrlCommonJackpot - commonjackpot
+message GameCtrlCommonJackpot {
+    int32 itemIndex = 1;
+}
+
+// GameCtrlAwardSpin - award spin
+message GameCtrlAwardSpin {
+    int64 bet = 1;
+    int32 lines = 2;
+    int32 times = 3;  
+    int64 totalBet = 4;
+}
+
+// GameCtrlDebug - debug params
+message GameCtrlDebug {
+    int32 debugState = 1;
+    repeated int64 lstRandom = 2;
+}
+
+// GameCtrl - game ctrl
+message GameCtrl {
+    int64 ctrlID = 1;
+
+    // only once
+    oneof ctrl {
+        GameCtrlSpin spin = 10;
+        GameCtrlSelectFree selectFree = 11;
+        GameCtrlFreeSpin freeSpin = 12;
+        GameCtrlBonus bonus = 13;
+        GameCtrlJackpot jackpot = 14;
+        GameCtrlCommonJackpot commonJackpot = 15;
+        GameCtrlAwardSpin awardSpin = 16;
+    }
+
+    // debug params
+    GameCtrlDebug debug = 100;
+
+    // Extended data reserved for the game
+    google.protobuf.Any exDat = 1000;
+}
+
+// StartFreeGame - start freegame
+message StartFreeGame {
+    int64 bet = 1;
+    int32 lines = 2;
+    int32 times = 3;  
+    int32 freeNums = 4;
+    int64 avgBet = 5;
+}
+
+// StartGameMod - start game module
+message StartGameMod {
+    // only once
+    oneof startParams {
+        StartFreeGame freegame = 1;
+    }
+
+    GameCtrlID parentCtrlID = 100;
+
+    // Extended data reserved for the game
+    google.protobuf.Any exDat = 1000;
+}
